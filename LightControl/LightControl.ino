@@ -1,9 +1,12 @@
 #include <Wire.h>
 #include <SeeedOLED.h>
 #include "DHT.h" //Required for temperature/humidity sensor
+#include <Encoder.h> //For the encoder/dial
+#include <TimerOne.h> //For the encoder/dial
 
 #define DHTPIN A0     // data pin for temperature/humidity sensor (DHT)
-#define DHTTYPE DHT11   // DHT 11 
+#define DHTTYPE DHT11   // Type of DHT sensor. The company who makes the sensor has at least three models
+//Encoder pins are D2 and D3
 
 DHT dht(DHTPIN, DHTTYPE);
 
@@ -16,6 +19,9 @@ void setup() {
 
   //setup for temperature/humidity sensor
   dht.begin();
+
+  //setup for the encoder/dial
+  encoder.Timer_init();
 
   //Debugging setup
   Serial.begin(9600);
@@ -31,7 +37,32 @@ void setup() {
 
 void loop() {
   displayTemperature(getTemperature());
+  checkEncoderRotation();
   getHumidity();
+  checkEncoderRotation();
+}
+
+//Checks for rotation, and returns a number based on the result:
+//Return 0 - when no rotation
+//Return 1 - when last rotation was anti-clockwise
+//Return 2 - when last rotation was clockwise
+int checkEncoderRotation()
+{
+  if (encoder.rotate_flag == 1)
+  {
+    encoder.rotate_flag = 0;
+    if (encoder.direct == 0)
+    {
+      Serial.println("counter-clockwise rotation detected");
+      return 1;
+    }
+    else
+    {
+      Serial.println("clockwise rotation detected");
+      return 2;
+    }
+  }
+  return 0;
 }
 
 //Get the Temperature from the DHT and send it to the OLED display
