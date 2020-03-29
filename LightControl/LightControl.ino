@@ -6,7 +6,8 @@
 
 #define DHTPIN A0     // data pin for temperature/humidity sensor (DHT)
 #define DHTTYPE DHT11   // Type of DHT sensor. The company who makes the sensor has at least three models
-//Encoder pins are D2 and D3
+//Encoder pins are 2 and 3
+#define BUTTONPIN 4
 
 DHT dht(DHTPIN, DHTTYPE);
 
@@ -23,6 +24,9 @@ void setup() {
   //setup for the encoder/dial
   encoder.Timer_init();
 
+  //setup for the button
+  pinMode(BUTTONPIN, INPUT);
+  
   //Debugging setup
   Serial.begin(9600);
 
@@ -40,12 +44,25 @@ void loop() {
   checkEncoderRotation();
   getHumidity();
   checkEncoderRotation();
+  getButtonState();
+}
+
+//Returns whether the button is currently pressed or not
+//Returns LOW (0) if not pressed
+//returns HIGH (1) if pressed
+int getButtonState()
+{
+  //Could get rid of the temp variable if no serial output needed
+  Serial.print("Button State: ");
+  int buttonState = digitalRead(BUTTONPIN);
+  Serial.println(buttonState);
+  return buttonState;
 }
 
 //Checks for rotation, and returns a number based on the result:
 //Return 0 - when no rotation
-//Return 1 - when last rotation was anti-clockwise
-//Return 2 - when last rotation was clockwise
+//Return -1 - when last rotation was anti-clockwise
+//Return 1 - when last rotation was clockwise
 int checkEncoderRotation()
 {
   if (encoder.rotate_flag == 1)
@@ -54,12 +71,12 @@ int checkEncoderRotation()
     if (encoder.direct == 0)
     {
       Serial.println("counter-clockwise rotation detected");
-      return 1;
+      return -1;
     }
     else
     {
       Serial.println("clockwise rotation detected");
-      return 2;
+      return 1;
     }
   }
   return 0;
